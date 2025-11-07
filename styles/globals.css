@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* إضافة خطوط عربية مناسبة هنا (مثلاً Cairo أو Cairo from Google Fonts) */
+body { @apply bg-white text-gray-800; }
