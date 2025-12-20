@@ -1,41 +1,69 @@
+/* حافظة الشريط */
 .header-banner {
-  background: linear-gradient(90deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
-  padding: 40px 20px;
+  width: 100%;
+}
+
+/* محتوى الشريط: نثبّت عنوان في الوسط واللوجو يمين */
+.header-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* يجعل العنوان في الوسط */
+  min-height: 96px;
+  /* نضيف مساحة يمين تكفي للّوجو حتى ما يغطي العنوان */
+  padding: 16px 96px 16px 16px;
+}
+
+/* العنوان: أبيض مع توهّج */
+.header-title {
+  margin: 0;
   text-align: center;
-  animation: slideInDown 1s ease-out;
-}
-
-. header-title {
-  font-family: 'GE SS Two', 'Cairo', serif;
-  font-size: 2.5rem;
   color: #fff;
-  font-weight: 700;
-  text-shadow:  2px 2px 8px rgba(0, 0, 0, 0.3);
-  animation: glow 2s ease-in-out infinite;
+  font-weight: 800;
+  /* توهّج أبيض ناعم */
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.85),
+    0 0 16px rgba(255, 255, 255, 0.6),
+    0 0 24px rgba(255, 255, 255, 0.45);
 }
 
-@keyframes slideInDown {
-  from {
-    opacity: 0;
-    transform:  translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform:  translateY(0);
-  }
+/* اللوجو ثابت في أقصى اليمين */
+.header-logo {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  /* لمسة ظل بسيطة */
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25));
 }
 
-@keyframes glow {
-  0%, 100% {
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 255, 255, 0.3);
-  }
-  50% {
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.6);
-  }
-}
-
+/* تجاوب مع الشاشات الصغيرة */
 @media (max-width: 768px) {
+  .header-content {
+    min-height: 80px;
+    padding-right: 72px; /* مساحة أقل يمين للموبايل */
+  }
+
   .header-title {
-    font-size:  1.8rem;
+    font-size: clamp(1.1rem, 5.5vw, 2rem);
+    line-height: 1.2;
+  }
+
+  .header-logo {
+    height: 36px;
+    right: 12px;
+  }
+}
+
+/* شاشات كبيرة */
+@media (min-width: 1200px) {
+  .header-title {
+    font-size: 2.4rem;
+  }
+  .header-logo {
+    height: 56px;
   }
 }
