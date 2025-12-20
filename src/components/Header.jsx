@@ -1,8 +1,9 @@
 import React from 'react'
 import '../styles/Headers.css'
-import siteConfig from '../config/siteConfig'
 
 export default function Header() {
+  const logoUrl = import.meta.env.VITE_LOGO_URL // إذا غير مُعرّف، اللوغو لن يظهر
+
   return (
     <div className="header-banner">
       <div className="header-content">
@@ -10,13 +11,15 @@ export default function Header() {
           مرحباً بكم في الموقع الرسمي الأول في تونس للتحويل الرقمي
         </h1>
 
-        {/* مكان ثابت لشعار الموقع في أقصى اليمين */}
-        <img
-          className="header-logo"
-          src={siteConfig.logoUrl}
-          alt="شعار الموقع"
-          loading="lazy"
-        />
+        {/* مكان ثابت لشعار الموقع في أقصى اليمين (اختياري) */}
+        {logoUrl && (
+          <img
+            className="header-logo"
+            src={logoUrl}
+            alt="شعار الموقع"
+            loading="lazy"
+          />
+        )}
       </div>
     </div>
   )
