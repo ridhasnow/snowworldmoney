@@ -1,6 +1,6 @@
 import React from 'react'
 import '../styles/Headers.css'
-import siteConfig from '../config/siteConfig'
+import logo from '../assets/logo.png' // استيراد الشعار من الكود
 
 export default function Header() {
   return (
@@ -10,15 +10,13 @@ export default function Header() {
           مرحباً بكم في الموقع الرسمي الأول في تونس للتحويل الرقمي
         </h1>
 
-        {/* نعرض اللوجو فقط إذا فيه رابط مضبوط */}
-        {siteConfig.logoUrl && (
-          <img
-            className="header-logo"
-            src={siteConfig.logoUrl}
-            alt="شعار الموقع"
-            loading="lazy"
-          />
-        )}
+        {/* اللوجو ثابت في أقصى اليمين */}
+        <img
+          className="header-logo"
+          src={logo}
+          alt="شعار الموقع"
+          loading="lazy"
+        />
       </div>
     </div>
   )
