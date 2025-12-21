@@ -1,20 +1,16 @@
-/* حافظة الشريط */
 .header-banner {
   width: 100%;
 }
 
-/* محتوى الشريط: نثبّت عنوان في الوسط واللوجو يمين */
 .header-content {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center; /* يجعل العنوان في الوسط */
+  justify-content: center; /* العنوان في الوسط */
   min-height: 96px;
-  /* نضيف مساحة يمين تكفي للّوجو حتى ما يغطي العنوان */
-  padding: 16px 96px 16px 16px;
+  padding: 16px 96px 16px 16px; /* مساحة يمين للّوجو */
 }
 
-/* العنوان: أبيض مع توهّج */
 .header-title {
   margin: 0;
   text-align: center;
@@ -26,7 +22,6 @@
     0 0 24px rgba(255, 255, 255, 0.45);
 }
 
-/* اللوجو ثابت في أقصى اليمين */
 .header-logo {
   position: absolute;
   right: 16px;
@@ -38,25 +33,21 @@
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25));
 }
 
-/* تجاوب مع الشاشات الصغيرة */
 @media (max-width: 768px) {
   .header-content {
     min-height: 80px;
-    padding-right: 72px; /* مساحة أقل يمين للموبايل */
+    padding-right: 72px;
   }
-
   .header-title {
     font-size: clamp(1.1rem, 5.5vw, 2rem);
     line-height: 1.2;
   }
-
   .header-logo {
     height: 36px;
     right: 12px;
   }
 }
 
-/* شاشات كبيرة */
 @media (min-width: 1200px) {
   .header-title {
     font-size: 2.4rem;
