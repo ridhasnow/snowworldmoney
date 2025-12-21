@@ -6,9 +6,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center; /* العنوان في الوسط */
+  justify-content: center;
   min-height: 96px;
-  padding: 16px 96px 16px 16px; /* مساحة يمين للّوجو */
+  padding: 16px 96px 16px 16px;
 }
 
 .header-title {
