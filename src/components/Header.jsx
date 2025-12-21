@@ -1,5 +1,5 @@
 import React from 'react'
-import '../styles/Headers.css'
+import '../styles/Header.css'
 import logo from '../assets/logo.png' // استيراد الشعار من الكود
 
 export default function Header() {
