@@ -14,27 +14,58 @@ function App() {
   return (
     <div className="app">
       <Routes>
+        {/* الموقع العام */}
         <Route path="/" element={<HomePage />} />
 
         {/* صفحة دخول الأدمن */}
         <Route path="/admin" element={<AdminLogin />} />
 
-        {/* مسارات الأدمن المحمية */}
+        {/* صفحات الأدمن المحمية - مسارات صريحة */}
         <Route
-          path="/admin/*"
+          path="/admin/dashboard"
           element={
             <AdminGuard>
               <AdminLayout />
             </AdminGuard>
           }
         >
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="transfers" element={<Transfers />} />
-          <Route path="users" element={<Users />} />
-          <Route path="products" element={<Products />} />
+          <Route index element={<Dashboard />} />
         </Route>
 
+        <Route
+          path="/admin/transfers"
+          element={
+            <AdminGuard>
+              <AdminLayout />
+            </AdminGuard>
+          }
+        >
+          <Route index element={<Transfers />} />
+        </Route>
+
+        <Route
+          path="/admin/users"
+          element={
+            <AdminGuard>
+              <AdminLayout />
+            </AdminGuard>
+          }
+        >
+          <Route index element={<Users />} />
+        </Route>
+
+        <Route
+          path="/admin/products"
+          element={
+            <AdminGuard>
+              <AdminLayout />
+            </AdminGuard>
+          }
+        >
+          <Route index element={<Products />} />
+        </Route>
+
+        {/* أي مسار غير معروف يعود للصفحة الرئيسية */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
