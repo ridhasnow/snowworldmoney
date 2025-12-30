@@ -12,14 +12,13 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
+  // نحول اسم المستخدم إلى بريد، لو كتب "admin" نستخدم البريد الثابت
   const toEmail = (u) => {
     if (!u) return ''
-    // لو كتب admin نستعمل ايميل ثابت
-    if (u.toLowerCase() === 'admin') return 'admin@snowworldmoney.tn'
-    // أو لو أدخل بريد بالفعل
-    if (u.includes('@')) return u
-    // fallback: نمط بريد من اليوزر
-    return `${u}@snowworldmoney.tn`
+    const s = u.trim().toLowerCase()
+    if (s === 'admin') return 'admin@snowworldmoney.tn'
+    if (s.includes('@')) return u.trim()
+    return `${s}@snowworldmoney.tn`
   }
 
   const handleSubmit = async (e) => {
@@ -28,7 +27,7 @@ export default function AdminLogin() {
     setLoading(true)
 
     try {
-      const email = toEmail(username.trim())
+      const email = toEmail(username)
       await signInWithEmailAndPassword(auth, email, password)
 
       const snap = await getDoc(doc(db, 'users', email))
@@ -53,14 +52,16 @@ export default function AdminLogin() {
         <h2>تسجيل دخول الأدمن</h2>
         {error && <div className="admin-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="admin-form">
+        <form onSubmit={handleSubmit} className="admin-form" noValidate>
           <input
             dir="auto"
             className="admin-input"
-            placeholder="اسم المستخدم"
+            type="text"                 // مهم: اسم مستخدم وليس بريد
+            placeholder="اسم المستخدم أو البريد"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            autoComplete="username"
           />
           <input
             className="admin-input"
@@ -69,11 +70,16 @@ export default function AdminLogin() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete="current-password"
           />
           <button className="admin-button" type="submit" disabled={loading}>
             {loading ? 'جاري التحقق...' : 'دخول'}
           </button>
         </form>
+
+        <p className="admin-hint" style={{textAlign:'center',marginTop:8}}>
+          يمكنك كتابة admin فقط، وسنحوّلها تلقائياً إلى admin@snowworldmoney.tn
+        </p>
       </div>
     </div>
   )
