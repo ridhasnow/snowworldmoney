@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { db } from '../../firebase'
 import {
   collection, addDoc, updateDoc, deleteDoc,
-  doc, getDocs, query, orderBy, limit, serverTimestamp
+  doc, getDocs, query, orderBy, limit, serverTimestamp, deleteField
 } from 'firebase/firestore'
 import uploadImageToCloudinary from '../../utils/uploadImage'
 
@@ -18,9 +18,8 @@ export default function Products() {
   const [form, setForm] = useState({
     name: '',
     currency: '',
-    fromId: '',
-    toId: '',
-    rate: '',
+    fromId: '',           // اختياري: من أي منتج يبدأ التبادل
+    routes: [{ toId: '', rate: '' }],  // مصفوفة المسارات
     active: true,
     imageFile: null,
     imageUrl: ''
@@ -49,8 +48,7 @@ export default function Products() {
       name: '',
       currency: '',
       fromId: '',
-      toId: '',
-      rate: '',
+      routes: [{ toId: '', rate: '' }],
       active: true,
       imageFile: null,
       imageUrl: ''
@@ -59,19 +57,46 @@ export default function Products() {
   }
 
   const openAdd = () => { resetForm(); setOpen(true) }
+
   const openEdit = (p) => {
+    // تحويل الحقول القديمة إلى routes إن وجدت
+    const legacyRoute = (p.toId || p.rate !== undefined)
+      ? [{ toId: p.toId || '', rate: p.rate ?? '' }]
+      : []
+
     setEditing(p)
     setForm({
       name: p.name || '',
       currency: p.currency || '',
       fromId: p.fromId || '',
-      toId: p.toId || '',
-      rate: p.rate ?? '',
+      routes: (Array.isArray(p.routes) && p.routes.length > 0) ? p.routes.map(r => ({
+        toId: r.toId || '',
+        rate: r.rate ?? ''
+      })) : (legacyRoute.length ? legacyRoute : [{ toId: '', rate: '' }]),
       active: p.active ?? true,
       imageFile: null,
       imageUrl: p.imageUrl || ''
     })
     setOpen(true)
+  }
+
+  const addRouteRow = () => {
+    setForm(f => ({ ...f, routes: [...f.routes, { toId: '', rate: '' }] }))
+  }
+
+  const removeRouteRow = (idx) => {
+    setForm(f => {
+      const next = [...f.routes]
+      next.splice(idx, 1)
+      return { ...f, routes: next.length ? next : [{ toId: '', rate: '' }] }
+    })
+  }
+
+  const setRouteField = (idx, key, value) => {
+    setForm(f => {
+      const next = f.routes.map((r, i) => i === idx ? { ...r, [key]: value } : r)
+      return { ...f, routes: next }
+    })
   }
 
   const handleSave = async (e) => {
@@ -84,6 +109,16 @@ export default function Products() {
         return
       }
 
+      // تنظيف المصفوفة: تجاهل المسارات الفارغة
+      const routes = form.routes
+        .map(r => ({ toId: (r.toId || '').trim(), rate: r.rate === '' ? '' : Number(r.rate) }))
+        .filter(r => r.toId)
+
+      if (routes.length === 0) {
+        setError('أضف مساراً واحداً على الأقل في حقل "إلى"')
+        return
+      }
+
       let docId = editing?.id
       let imageUrl = editing?.imageUrl || ''
       let cloudPublicId = editing?.cloudPublicId || ''
@@ -93,8 +128,7 @@ export default function Products() {
           name: form.name,
           currency: form.currency,
           fromId: form.fromId || '',
-          toId: form.toId || '',
-          rate: form.rate ? Number(form.rate) : 0,
+          routes,               // نحفظ المصفوفة
           active: !!form.active,
           imageUrl: '',
           cloudPublicId: '',
@@ -113,16 +147,18 @@ export default function Products() {
         imageUrl = (form.imageUrl || '').trim()
       }
 
+      // تحديث الوثيقة + حذف الحقول القديمة إن وجدت
       await updateDoc(doc(db, 'products', docId), {
         name: form.name,
         currency: form.currency,
         fromId: form.fromId || '',
-        toId: form.toId || '',
-        rate: form.rate ? Number(form.rate) : 0,
+        routes,
         active: !!form.active,
         imageUrl,
         cloudPublicId,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        toId: deleteField(),
+        rate: deleteField(),
       })
 
       setOpen(false)
@@ -137,7 +173,6 @@ export default function Products() {
   const handleDelete = async (p) => {
     if (!confirm(`حذف المنتج: ${p.name}?`)) return
     try {
-      // حذف الصورة من Cloudinary يتطلب API موقّع؛ حالياً نحذف الوثيقة فقط.
       await deleteDoc(doc(db, 'products', p.id))
       await loadProducts()
     } catch (e) {
@@ -145,6 +180,8 @@ export default function Products() {
       setError('تعذّر حذف المنتج')
     }
   }
+
+  const nameById = (id) => products.find(x => x.id === id)?.name || '—'
 
   return (
     <div>
@@ -167,8 +204,8 @@ export default function Products() {
                 <th>الصورة</th>
                 <th>الاسم</th>
                 <th>العملة</th>
-                <th>من → إلى</th>
-                <th>السعر/المعدل</th>
+                <th>من</th>
+                <th>المسارات (إلى → معدل)</th>
                 <th>مفعل؟</th>
                 <th>إجراءات</th>
               </tr>
@@ -181,8 +218,15 @@ export default function Products() {
                   </td>
                   <td>{p.name}</td>
                   <td>{p.currency}</td>
-                  <td>{(products.find(x => x.id === p.fromId)?.name || '—') + ' → ' + (products.find(x => x.id === p.toId)?.name || '—')}</td>
-                  <td>{p.rate ?? 0}</td>
+                  <td>{nameById(p.fromId)}</td>
+                  <td style={{maxWidth:360}}>
+                    {(Array.isArray(p.routes) ? p.routes : []).map((r, idx) => (
+                      <span key={idx} className="admin-chip">
+                        {nameById(r.toId)} <span className="admin-chip-meta">({r.rate ?? 0})</span>
+                      </span>
+                    ))}
+                    {(!p.routes || p.routes.length === 0) && '—'}
+                  </td>
                   <td>{p.active ? 'نعم' : 'لا'}</td>
                   <td>
                     <button className="admin-button" onClick={() => openEdit(p)} style={{marginInlineEnd:8}}>تعديل</button>
@@ -206,6 +250,7 @@ export default function Products() {
               <h3>{editing ? 'تعديل منتج' : 'إضافة منتج'}</h3>
               <button className="admin-close" onClick={() => { setOpen(false); resetForm() }}>×</button>
             </div>
+
             <form className="admin-form-grid" onSubmit={handleSave}>
               <label>اسم المنتج</label>
               <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
@@ -219,14 +264,20 @@ export default function Products() {
                 {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
 
-              <label>إلى</label>
-              <select value={form.toId} onChange={e => setForm({...form, toId: e.target.value})}>
-                <option value="">—</option>
-                {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-
-              <label>السعر/المعدل</label>
-              <input type="number" step="0.00000001" value={form.rate} onChange={e => setForm({...form, rate: e.target.value})} />
+              <label>المسارات (إلى + المعدل)</label>
+              <div style={{display:'grid', gap:10}}>
+                {form.routes.map((r, idx) => (
+                  <div key={idx} style={{display:'grid', gridTemplateColumns:'2fr 1fr auto', gap:8}}>
+                    <select value={r.toId} onChange={e => setRouteField(idx, 'toId', e.target.value)}>
+                      <option value="">—</option>
+                      {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    <input type="number" step="0.00000001" value={r.rate} onChange={e => setRouteField(idx, 'rate', e.target.value)} placeholder="المعدل" />
+                    <button type="button" className="admin-logout" onClick={() => removeRouteRow(idx)}>حذف</button>
+                  </div>
+                ))}
+                <button type="button" className="admin-button" onClick={addRouteRow}>إضافة مسار</button>
+              </div>
 
               <label>مفعل؟</label>
               <select value={form.active ? '1' : '0'} onChange={e => setForm({...form, active: e.target.value === '1'})}>
