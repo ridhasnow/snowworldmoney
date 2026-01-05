@@ -101,6 +101,19 @@
   border-radius: 6px;
 }
 
+/* ===== شارات مسارات المنتج (routes chips) ===== */
+.admin-chip {
+  display: inline-block;
+  background: #eef2ff;
+  color: #1e293b;
+  border: 1px solid #e5e7eb;
+  padding: 4px 8px;
+  border-radius: 999px;
+  margin: 2px;
+  font-size: .85rem;
+}
+.admin-chip-meta { color: #4b5563; }
+
 /* ===== مودال الإضافة/التعديل ===== */
 .admin-backdrop {
   position: fixed;
