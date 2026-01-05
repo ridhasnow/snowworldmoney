@@ -18,8 +18,8 @@ export default function Products() {
   const [form, setForm] = useState({
     name: '',
     currency: '',
-    fromId: '',           // اختياري: من أي منتج يبدأ التبادل
-    routes: [{ toId: '', rate: '' }],  // مصفوفة المسارات
+    fromId: '',
+    routes: [{ toId: '', baseFrom: '1', baseTo: '' }],
     active: true,
     imageFile: null,
     imageUrl: ''
@@ -48,7 +48,7 @@ export default function Products() {
       name: '',
       currency: '',
       fromId: '',
-      routes: [{ toId: '', rate: '' }],
+      routes: [{ toId: '', baseFrom: '1', baseTo: '' }],
       active: true,
       imageFile: null,
       imageUrl: ''
@@ -59,9 +59,9 @@ export default function Products() {
   const openAdd = () => { resetForm(); setOpen(true) }
 
   const openEdit = (p) => {
-    // تحويل الحقول القديمة إلى routes إن وجدت
+    // تحويل بيانات قديمة (toId/rate) إلى صيغة routes تلقائياً
     const legacyRoute = (p.toId || p.rate !== undefined)
-      ? [{ toId: p.toId || '', rate: p.rate ?? '' }]
+      ? [{ toId: p.toId || '', baseFrom: '1', baseTo: (p.rate ?? '').toString() }]
       : []
 
     setEditing(p)
@@ -69,10 +69,13 @@ export default function Products() {
       name: p.name || '',
       currency: p.currency || '',
       fromId: p.fromId || '',
-      routes: (Array.isArray(p.routes) && p.routes.length > 0) ? p.routes.map(r => ({
-        toId: r.toId || '',
-        rate: r.rate ?? ''
-      })) : (legacyRoute.length ? legacyRoute : [{ toId: '', rate: '' }]),
+      routes: (Array.isArray(p.routes) && p.routes.length > 0)
+        ? p.routes.map(r => ({
+            toId: r.toId || '',
+            baseFrom: (r.baseFrom ?? '1').toString(),
+            baseTo: (r.baseTo ?? '').toString()
+          }))
+        : (legacyRoute.length ? legacyRoute : [{ toId: '', baseFrom: '1', baseTo: '' }]),
       active: p.active ?? true,
       imageFile: null,
       imageUrl: p.imageUrl || ''
@@ -81,14 +84,14 @@ export default function Products() {
   }
 
   const addRouteRow = () => {
-    setForm(f => ({ ...f, routes: [...f.routes, { toId: '', rate: '' }] }))
+    setForm(f => ({ ...f, routes: [...f.routes, { toId: '', baseFrom: '1', baseTo: '' }] }))
   }
 
   const removeRouteRow = (idx) => {
     setForm(f => {
       const next = [...f.routes]
       next.splice(idx, 1)
-      return { ...f, routes: next.length ? next : [{ toId: '', rate: '' }] }
+      return { ...f, routes: next.length ? next : [{ toId: '', baseFrom: '1', baseTo: '' }] }
     })
   }
 
@@ -109,13 +112,17 @@ export default function Products() {
         return
       }
 
-      // تنظيف المصفوفة: تجاهل المسارات الفارغة
+      // تنظيف وفلترة المسارات
       const routes = form.routes
-        .map(r => ({ toId: (r.toId || '').trim(), rate: r.rate === '' ? '' : Number(r.rate) }))
-        .filter(r => r.toId)
+        .map(r => ({
+          toId: (r.toId || '').trim(),
+          baseFrom: Number(r.baseFrom || '0'),
+          baseTo: Number(r.baseTo || '0')
+        }))
+        .filter(r => r.toId && r.baseFrom > 0 && r.baseTo > 0)
 
       if (routes.length === 0) {
-        setError('أضف مساراً واحداً على الأقل في حقل "إلى"')
+        setError('أضف مساراً واحداً على الأقل، مع قيم صحيحة لـ "من" و"إلى"')
         return
       }
 
@@ -128,7 +135,7 @@ export default function Products() {
           name: form.name,
           currency: form.currency,
           fromId: form.fromId || '',
-          routes,               // نحفظ المصفوفة
+          routes,
           active: !!form.active,
           imageUrl: '',
           cloudPublicId: '',
@@ -138,7 +145,7 @@ export default function Products() {
         docId = newDoc.id
       }
 
-      // رفع الصورة أو استخدام رابط
+      // رفع الصورة أو استعمال رابط
       if (useCloudinary && form.imageFile) {
         const up = await uploadImageToCloudinary(form.imageFile)
         imageUrl = up.url
@@ -147,7 +154,6 @@ export default function Products() {
         imageUrl = (form.imageUrl || '').trim()
       }
 
-      // تحديث الوثيقة + حذف الحقول القديمة إن وجدت
       await updateDoc(doc(db, 'products', docId), {
         name: form.name,
         currency: form.currency,
@@ -157,6 +163,7 @@ export default function Products() {
         imageUrl,
         cloudPublicId,
         updatedAt: serverTimestamp(),
+        // حذف الحقول القديمة إن وجدت
         toId: deleteField(),
         rate: deleteField(),
       })
@@ -182,6 +189,7 @@ export default function Products() {
   }
 
   const nameById = (id) => products.find(x => x.id === id)?.name || '—'
+  const currencyById = (id) => products.find(x => x.id === id)?.currency || ''
 
   return (
     <div>
@@ -205,7 +213,7 @@ export default function Products() {
                 <th>الاسم</th>
                 <th>العملة</th>
                 <th>من</th>
-                <th>المسارات (إلى → معدل)</th>
+                <th>المسارات (إلى: 1 من → كم إلى)</th>
                 <th>مفعل؟</th>
                 <th>إجراءات</th>
               </tr>
@@ -219,10 +227,13 @@ export default function Products() {
                   <td>{p.name}</td>
                   <td>{p.currency}</td>
                   <td>{nameById(p.fromId)}</td>
-                  <td style={{maxWidth:360}}>
+                  <td style={{maxWidth:400}}>
                     {(Array.isArray(p.routes) ? p.routes : []).map((r, idx) => (
                       <span key={idx} className="admin-chip">
-                        {nameById(r.toId)} <span className="admin-chip-meta">({r.rate ?? 0})</span>
+                        {nameById(r.toId)}{' '}
+                        <span className="admin-chip-meta">
+                          ( {r.baseFrom ?? 1} {p.currency} → {r.baseTo ?? 0} {currencyById(r.toId)} )
+                        </span>
                       </span>
                     ))}
                     {(!p.routes || p.routes.length === 0) && '—'}
@@ -264,15 +275,28 @@ export default function Products() {
                 {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
 
-              <label>المسارات (إلى + المعدل)</label>
+              <label>المسارات (إلى + الزوج 1 من → كم إلى)</label>
               <div style={{display:'grid', gap:10}}>
                 {form.routes.map((r, idx) => (
-                  <div key={idx} style={{display:'grid', gridTemplateColumns:'2fr 1fr auto', gap:8}}>
+                  <div key={idx} style={{display:'grid', gridTemplateColumns:'2fr 1fr 1fr auto', gap:8}}>
                     <select value={r.toId} onChange={e => setRouteField(idx, 'toId', e.target.value)}>
                       <option value="">—</option>
                       {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
-                    <input type="number" step="0.00000001" value={r.rate} onChange={e => setRouteField(idx, 'rate', e.target.value)} placeholder="المعدل" />
+                    <input
+                      type="number"
+                      step="0.00000001"
+                      value={r.baseFrom}
+                      onChange={e => setRouteField(idx, 'baseFrom', e.target.value)}
+                      placeholder="1 من"
+                    />
+                    <input
+                      type="number"
+                      step="0.00000001"
+                      value={r.baseTo}
+                      onChange={e => setRouteField(idx, 'baseTo', e.target.value)}
+                      placeholder="كم إلى"
+                    />
                     <button type="button" className="admin-logout" onClick={() => removeRouteRow(idx)}>حذف</button>
                   </div>
                 ))}
