@@ -18,6 +18,7 @@ export default function Products() {
   const [form, setForm] = useState({
     name: '',
     currency: '',
+    sendAddress: '',       // عنوان الإرسال (محفظة الأدمن لهذا المنتج)
     fromId: '',
     routes: [{ toId: '', baseFrom: '1', baseTo: '' }],
     active: true,
@@ -47,6 +48,7 @@ export default function Products() {
     setForm({
       name: '',
       currency: '',
+      sendAddress: '',
       fromId: '',
       routes: [{ toId: '', baseFrom: '1', baseTo: '' }],
       active: true,
@@ -68,6 +70,7 @@ export default function Products() {
     setForm({
       name: p.name || '',
       currency: p.currency || '',
+      sendAddress: p.sendAddress || '',
       fromId: p.fromId || '',
       routes: (Array.isArray(p.routes) && p.routes.length > 0)
         ? p.routes.map(r => ({
@@ -134,6 +137,7 @@ export default function Products() {
         const newDoc = await addDoc(productsCol, {
           name: form.name,
           currency: form.currency,
+          sendAddress: form.sendAddress || '',
           fromId: form.fromId || '',
           routes,
           active: !!form.active,
@@ -157,6 +161,7 @@ export default function Products() {
       await updateDoc(doc(db, 'products', docId), {
         name: form.name,
         currency: form.currency,
+        sendAddress: form.sendAddress || '',
         fromId: form.fromId || '',
         routes,
         active: !!form.active,
@@ -173,7 +178,7 @@ export default function Products() {
       await loadProducts()
     } catch (e) {
       console.error(e)
-      setError('تعذّر حفظ المنتج')
+      setError('تع��ّر حفظ المنتج')
     }
   }
 
@@ -212,6 +217,7 @@ export default function Products() {
                 <th>الصورة</th>
                 <th>الاسم</th>
                 <th>العملة</th>
+                <th>عنوان الإرسال</th>
                 <th>من</th>
                 <th>المسارات (إلى: 1 من → كم إلى)</th>
                 <th>مفعل؟</th>
@@ -226,6 +232,7 @@ export default function Products() {
                   </td>
                   <td>{p.name}</td>
                   <td>{p.currency}</td>
+                  <td style={{maxWidth:240, wordBreak:'break-all'}}>{p.sendAddress || '—'}</td>
                   <td>{nameById(p.fromId)}</td>
                   <td style={{maxWidth:400}}>
                     {(Array.isArray(p.routes) ? p.routes : []).map((r, idx) => (
@@ -246,7 +253,7 @@ export default function Products() {
                 </tr>
               ))}
               {products.length === 0 && (
-                <tr><td colSpan="7" style={{textAlign:'center',padding:'16px'}}>لا توجد منتجات بعد.</td></tr>
+                <tr><td colSpan="8" style={{textAlign:'center',padding:'16px'}}>لا توجد منتجات بعد.</td></tr>
               )}
             </tbody>
           </table>
@@ -268,6 +275,13 @@ export default function Products() {
 
               <label>العملة</label>
               <input value={form.currency} onChange={e => setForm({...form, currency: e.target.value})} placeholder="مثال: TND, USD, BTC" />
+
+              <label>عنوان الإرسال (محفظة الأدمن لهذا المنتج)</label>
+              <input
+                value={form.sendAddress}
+                onChange={e => setForm({...form, sendAddress: e.target.value})}
+                placeholder="مثال: عنوان محفظة USDT أو Payeer..."
+              />
 
               <label>من</label>
               <select value={form.fromId} onChange={e => setForm({...form, fromId: e.target.value})}>
