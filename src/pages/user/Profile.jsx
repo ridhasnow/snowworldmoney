@@ -1,4 +1,3 @@
-```javascript
 import React, { useEffect, useState } from 'react'
 import { auth, db } from '../../firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
@@ -133,4 +132,3 @@ export default function Profile() {
     </div>
   )
 }
-```
