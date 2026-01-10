@@ -18,7 +18,7 @@
   animation: slideUp 0.6s ease-out;
 }
 
-. auth-form h2 {
+.auth-form h2 {
   text-align: center;
   color: #333;
   margin-bottom: 30px;
@@ -37,7 +37,7 @@
   direction: rtl;
 }
 
-. auth-input:focus {
+.auth-input:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
@@ -67,7 +67,7 @@
   cursor: not-allowed;
 }
 
-. toggle-button {
+.toggle-button {
   margin-top: 20px;
   background: transparent;
   color: white;
