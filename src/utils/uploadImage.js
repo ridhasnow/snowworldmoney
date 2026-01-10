@@ -3,13 +3,17 @@ export default async function uploadImageToCloudinary(file) {
   const preset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
   if (!cloudName || !preset) {
-    throw new Error('Cloudinary env vars are missing')
+    throw new Error('Cloudinary env vars are missing: VITE_CLOUDINARY_CLOUD_NAME or VITE_CLOUDINARY_UPLOAD_PRESET')
+  }
+  if (!file) {
+    throw new Error('No file provided to upload')
   }
 
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`
   const formData = new FormData()
   formData.append('file', file)
   formData.append('upload_preset', preset)
+  // يمكنك تغيير اسم المجلد لاحقاً (مثلاً proofs)، هذا لا يؤثر على عمل الموقع
   formData.append('folder', 'products')
 
   const res = await fetch(url, { method: 'POST', body: formData })
