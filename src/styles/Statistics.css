@@ -29,7 +29,7 @@
   text-align: center;
 }
 
-. transactions-list {
+.transactions-list {
   list-style: none;
   max-height: 300px;
   overflow-y:  auto;
