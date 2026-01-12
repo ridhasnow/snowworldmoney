@@ -9,11 +9,11 @@ import Transfers from './pages/admin/Transfers'
 import Users from './pages/admin/Users'
 import Products from './pages/admin/Products'
 
-import UserGuard from './pages/user/UserGuard'
-import UserLayout from './pages/user/UserLayout'
-import Convert from './pages/user/Convert'
-import Profile from './pages/user/Profile'
-import History from './pages/user/History'
+import UserGuard from './pages/user/UserGuard.jsx'
+import UserLayout from './pages/user/UserLayout.jsx'
+import Convert from './pages/user/Convert.jsx'
+import Profile from './pages/user/Profile.jsx'
+import History from './pages/user/History.jsx'
 
 import './styles/App.css'
 
@@ -85,7 +85,6 @@ function App() {
           <Route path="convert" element={<Convert />} />
           <Route path="profile" element={<Profile />} />
           <Route path="history" element={<History />} />
-          {/* earn placeholder لاحقاً */}
         </Route>
 
         {/* أي مسار غير معروف يعود للصفحة الرئيسية */}
