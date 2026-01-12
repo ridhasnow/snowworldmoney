@@ -16,18 +16,14 @@ export default function AuthForm() {
   const handleSignUp = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setMessage('')
+
     try {
-      const userDocRef = doc(db, 'users', email)
-      const userDoc = await getDoc(userDocRef)
-
-      if (userDoc.exists()) {
-        setMessage('⚠️ هذا الحساب موجود بالفعل!')
-        setLoading(false)
-        return
-      }
-
+      // أنشئ الحساب أولاً (سيفشل تلقائياً إن كان الإيميل مستخدماً)
       await createUserWithEmailAndPassword(auth, email, password)
-      await setDoc(userDocRef, {
+
+      // ثم اكتب وثيقة المستخدم مباشرة
+      await setDoc(doc(db, 'users', email), {
         email,
         createdAt: new Date(),
         role: 'user',
@@ -41,24 +37,42 @@ export default function AuthForm() {
         birthdate: '',
         whatsapp: '',
         telegram: ''
-      })
-      setMessage('✅ تم إنشاء الحساب بنجاح!')
+      }, { merge: true })
+
+      setMessage('✅ تم إنشاء الحساب بنجاح! جارٍ فتح حسابك...')
       setEmail('')
       setPassword('')
       navigate('/account/convert', { replace: true })
     } catch (error) {
-      setMessage(`❌ خطأ: ${error.message}`)
+      if (error?.code === 'auth/email-already-in-use') {
+        setMessage('⚠️ هذا البريد مستخدم بالفعل. سجّل دخولك.')
+      } else if (!navigator.onLine) {
+        setMessage('❌ لا يوجد اتصال بالإنترنت. تفقّد الشبكة وحاول مجدداً.')
+      } else {
+        setMessage(`❌ خطأ: ${error.message}`)
+      }
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleSignIn = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setMessage('')
+
     try {
       await signInWithEmailAndPassword(auth, email, password)
-      const snap = await getDoc(doc(db, 'users', email))
-      const role = snap.exists() ? snap.data()?.role : 'user'
+
+      // بعد تسجيل الدخول افحص الدور من Firestore
+      let role = 'user'
+      try {
+        const snap = await getDoc(doc(db, 'users', email))
+        if (snap.exists()) role = snap.data()?.role || 'user'
+      } catch {
+        // تجاهل أي أخطاء قراءة هنا، واستمر كمستخدم عادي
+      }
+
       if (role === 'admin') {
         setMessage('✅ تم تسجيل الدخول كأدمن، جارٍ فتح اللوحة...')
         navigate('/admin/dashboard', { replace: true })
@@ -66,12 +80,18 @@ export default function AuthForm() {
         setMessage('✅ تم تسجيل الدخول بنجاح! جارٍ فتح حسابك...')
         navigate('/account/convert', { replace: true })
       }
+
       setEmail('')
       setPassword('')
     } catch (error) {
-      setMessage(`❌ خطأ في البيانات: ${error.message}`)
+      if (!navigator.onLine) {
+        setMessage('❌ لا يوجد اتصال بالإنترنت. تفقّد الشبكة.')
+      } else {
+        setMessage(`❌ خطأ في البيانات: ${error.message}`)
+      }
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -79,14 +99,27 @@ export default function AuthForm() {
       {message && <div className="toast-notification">{message}</div>}
       <form className="auth-form" onSubmit={isSignUp ? handleSignUp : handleSignIn}>
         <h2>{isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}</h2>
-        <input type="email" placeholder="البريد الإلكتروني" value={email}
-               onChange={(e) => setEmail(e.target.value)} required className="auth-input" />
-        <input type="password" placeholder="كلمة السر" value={password}
-               onChange={(e) => setPassword(e.target.value)} required className="auth-input" />
+        <input
+          type="email"
+          placeholder="البريد الإلكتروني"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="auth-input"
+        />
+        <input
+          type="password"
+          placeholder="كلمة السر"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="auth-input"
+        />
         <button type="submit" disabled={loading} className="auth-button">
           {loading ? 'جاري المعالجة...' : (isSignUp ? 'إنشاء حساب' : 'تسجيل دخول')}
         </button>
       </form>
+
       <button className="toggle-button" onClick={() => setIsSignUp(!isSignUp)}>
         {isSignUp ? 'لديك حساب؟ سجل دخول' : 'ليس لديك حساب؟ أنشئ واحداً'}
       </button>
