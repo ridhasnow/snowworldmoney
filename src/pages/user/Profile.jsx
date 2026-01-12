@@ -1,4 +1,3 @@
-```javascript
 import React, { useEffect, useState } from 'react'
 import { auth, db } from '../../firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
@@ -83,9 +82,13 @@ export default function Profile() {
         <div className="avatar-grid">
           {avatars.map(a => (
             <label key={a.value} className={"avatar-option" + (form.avatar === a.value ? " selected" : "")}>
-              <input type="radio" name="avatar" value={a.value}
-                     checked={form.avatar === a.value}
-                     onChange={() => setForm({ ...form, avatar: a.value })} />
+              <input
+                type="radio"
+                name="avatar"
+                value={a.value}
+                checked={form.avatar === a.value}
+                onChange={() => setForm({ ...form, avatar: a.value })}
+              />
               <img src={a.src} alt={a.value} />
             </label>
           ))}
@@ -112,15 +115,21 @@ export default function Profile() {
         <label>واتساب</label>
         <div className="social-row">
           <img src={whatsappIcon} alt="whatsapp" />
-          <input value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value })}
-                 placeholder="رقم واتساب أو رابط" />
+          <input
+            value={form.whatsapp}
+            onChange={e => setForm({ ...form, whatsapp: e.target.value })}
+            placeholder="رقم واتساب أو رابط"
+          />
         </div>
 
         <label>تيليجرام</label>
         <div className="social-row">
           <img src={telegramIcon} alt="telegram" />
-          <input value={form.telegram} onChange={e => setForm({ ...form, telegram: e.target.value })}
-                 placeholder="@username" />
+          <input
+            value={form.telegram}
+            onChange={e => setForm({ ...form, telegram: e.target.value })}
+            placeholder="@username"
+          />
         </div>
 
         <label>البريد الإلكتروني (غير قابل للتعديل)</label>
@@ -133,4 +142,3 @@ export default function Profile() {
     </div>
   )
 }
-```
