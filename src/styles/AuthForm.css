@@ -1,131 +1,119 @@
+/* Auth form — Glassmorphism with theme variables from App.css */
+
 .auth-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  padding: 40px 20px;
-  background: rgba(255, 255, 255, 0.05);
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+  padding: 24px;
 }
 
+/* بطاقة النموذج */
 .auth-form {
-  background: white;
-  padding: 40px;
-  border-radius: 15px;
-  box-shadow:  0 8px 32px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px;
-  animation: slideUp 0.6s ease-out;
+  max-width: 480px;
+  padding: 22px;
+  background: var(--card, rgba(255,255,255,.06));
+  border: 1px solid var(--card-border, rgba(255,255,255,.14));
+  border-radius: var(--radius, 14px);
+  backdrop-filter: blur(var(--blur, 12px));
+  box-shadow: var(--shadow, 0 12px 40px rgba(0,0,0,.24));
+  animation: slideUp .5s ease-out both;
 }
 
-. auth-form h2 {
+.auth-form h2 {
   text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-  font-size: 1.8rem;
+  margin: 0 0 12px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  text-shadow: 0 0 16px rgba(138,92,246,.4);
+  color: var(--text, #e2e8f0);
 }
 
+/* الحقول */
 .auth-input {
   width: 100%;
-  padding: 12px 15px;
-  margin-bottom: 15px;
-  border: 2px solid #e0e0e0;
-  border-radius:  8px;
-  font-size: 1rem;
-  font-family: 'Cairo', sans-serif;
-  transition: all 0.3s ease;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.15);
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
   direction: rtl;
 }
 
-. auth-input:focus {
+.auth-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+  border-color: #a5b4fc;
+  box-shadow: 0 0 0 3px rgba(165,180,252,.25);
+  background: rgba(255,255,255,.08);
 }
 
+/* الأزرار */
 .auth-button {
   width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor:  pointer;
-  transition: all 0.3s ease;
-  font-family: 'Cairo', sans-serif;
-}
-
-.auth-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-}
-
-.auth-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-. toggle-button {
-  margin-top: 20px;
-  background: transparent;
-  color: white;
-  border: 2px solid white;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
   cursor: pointer;
-  font-family: 'Cairo', sans-serif;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--primary, #6d70ff), var(--primary-2, #8a5cf6));
+  box-shadow: 0 10px 24px rgba(109,112,255,.25);
+  font-weight: 700;
+  transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
 }
 
-.toggle-button:hover {
-  background: white;
-  color: #667eea;
+.auth-button:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05) }
+.auth-button:active { transform: translateY(0) scale(.98) }
+.auth-button:disabled { opacity: .6; cursor: not-allowed }
+
+/* زر التبديل بين إنشاء/دخول */
+.toggle-button {
+  width: 100%;
+  max-width: 480px;
+  margin: 10px auto 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: var(--text, #e2e8f0);
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, transform .12s ease;
+  backdrop-filter: blur(12px);
 }
 
+.toggle-button:hover { background: rgba(255,255,255,.12); transform: translateY(-1px) }
+.toggle-button:active { transform: translateY(0) }
+
+/* التوست */
 .toast-notification {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 15px 25px;
-  border-radius:  8px;
-  animation: slideInLeft 0.5s ease-out;
+  top: 16px;
+  left: 16px;
+  background: rgba(255,255,255,.08);
+  color: var(--text, #e2e8f0);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow, 0 12px 40px rgba(0,0,0,.24));
+  animation: slideInLeft .45s ease-out both;
   z-index: 1000;
-  font-family: 'Cairo', sans-serif;
 }
 
+/* حركات لطيفة */
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform:  translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(22px) }
+  to   { opacity: 1; transform: translateY(0) }
 }
-
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-100px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-22px) }
+  to   { opacity: 1; transform: translateX(0) }
 }
 
+/* تجاوب */
 @media (max-width: 768px) {
-  .auth-form {
-    padding: 30px 20px;
-  }
-
-  .auth-form h2 {
-    font-size: 1.4rem;
-  }
+  .auth-form { padding: 18px }
+  .auth-form h2 { font-size: 1.25rem }
 }
