@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { auth, db } from '../../firebase'
-import { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from 'firebase/firestore'
+import {
+  collection, addDoc, doc, getDocs, query, orderBy, limit, serverTimestamp
+} from 'firebase/firestore'
 import uploadImageToCloudinary from '../../utils/uploadImage'
 import '../../styles/User.css'
 
@@ -13,17 +15,20 @@ export default function Convert() {
 
   const [fromP, setFromP] = useState(null)
   const [toP, setToP] = useState(null)
+
   const [step, setStep] = useState(1)
-  const [showPicker, setShowPicker] = useState({ open: false, for: null }) // التحكم في التوب أب
   const [amount, setAmount] = useState('')
   const [sendAddress, setSendAddress] = useState('')
-  const [rate, setRate] = useState({ baseFrom: 1, baseTo: 0 })
+
+  const [rate, setRate] = useState({ baseFrom: 1, baseTo: 0 }) // 1 من → كم إلى
   const [calcTo, setCalcTo] = useState(0)
+
   const [txId, setTxId] = useState('')
   const [proofFile, setProofFile] = useState(null)
   const [proofUrl, setProofUrl] = useState('')
   const [receiveAddress, setReceiveAddress] = useState('')
   const [msg, setMsg] = useState('')
+  const [showPicker, setShowPicker] = useState({ open: false, target: null }) // المفتاح لتفعيل التوب أب
 
   useEffect(() => {
     const load = async () => {
@@ -118,7 +123,7 @@ export default function Convert() {
         <div className="product-picker">
           <div className="picker-header">
             <h3>اختيار المنتج</h3>
-            <button className="close-picker" onClick={() => setShowPicker({ open: false, for: null })}>✖</button>
+            <button className="close-picker" onClick={() => setShowPicker({ open: false, target: null })}>✖</button>
           </div>
           <div className="picker-grid">
             {products.map(p => (
@@ -126,8 +131,9 @@ export default function Convert() {
                 key={p.id}
                 className="picker-item"
                 onClick={() => {
-                  showPicker.for === 'from' ? setFromP(p) : setToP(p)
-                  setShowPicker({ open: false, for: null })
+                  if (showPicker.target === 'from') setFromP(p)
+                  else setToP(p)
+                  setShowPicker({ open: false, target: null })
                 }}
               >
                 <img src={p.imageUrl} alt={p.name} />
@@ -150,7 +156,7 @@ export default function Convert() {
                 <div className="product-logo">{fromP?.imageUrl ? <img src={fromP.imageUrl} alt="من" /> : '—'}</div>
                 <div className="product-name">{fromP?.name || '—'}</div>
               </div>
-              <button className="user-button" onClick={() => setShowPicker({ open: true, for: 'from' })}>تغيير الاختيار</button>
+              <button className="user-button" onClick={() => setShowPicker({ open: true, target: 'from' })}>تغيير الاختيار</button>
             </div>
 
             <div className="arrow-box">→</div>
@@ -161,16 +167,14 @@ export default function Convert() {
                 <div className="product-logo">{toP?.imageUrl ? <img src={toP.imageUrl} alt="إلى" /> : '—'}</div>
                 <div className="product-name">{toP?.name || '—'}</div>
               </div>
-              <button className="user-button" onClick={() => setShowPicker({ open: true, for: 'to' })}>تغيير الاختيار</button>
+              <button className="user-button" onClick={() => setShowPicker({ open: true, target: 'to' })}>تغيير الاختيار</button>
             </div>
           </div>
 
           <div className="rate-info">
-            {rate.baseTo > 0 ? (
-              <strong>التعريفة: 1 {fromP?.currency} = {(rate.baseTo / rate.baseFrom).toFixed(6)} {toP?.currency}</strong>
-            ) : (
-              <span>لا توجد تعريفة متاحة بين المنتجين</span>
-            )}
+            {rate.baseTo > 0
+              ? <strong>التعريفة: 1 {fromP?.currency} = {(rate.baseTo / rate.baseFrom).toFixed(6)} {toP?.currency}</strong>
+              : <span>لا توجد تعريفة متاحة</span>}
           </div>
 
           <div className="convert-actions">
@@ -184,7 +188,6 @@ export default function Convert() {
           </div>
         </div>
       )}
-      {/* باقي الخطوات محفوظة */}
     </div>
   )
 }
