@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 import { auth, db } from '../../firebase'
 import { doc, getDoc, onSnapshot } from 'firebase/firestore'
 import '../../styles/User.css'
@@ -7,7 +7,7 @@ import '../../styles/User.css'
 export default function UserLayout() {
   const [points, setPoints] = useState(0)
   const [email, setEmail] = useState('')
-  const [avatar, setAvatar] = useState('') // اسم ملف الأفاتار المحفوظ
+  const [avatar, setAvatar] = useState('')
 
   // دالة ترجمة اسم الأفاتار إلى رابط الصورة
   const avatarUrl = (val) => {
@@ -66,7 +66,7 @@ export default function UserLayout() {
         </div>
       </header>
       <main className="user-content">
-        {/* تعرض children عبر Routes في App.jsx */}
+        <Outlet /> {/* عرض محتوى الصفحة حسب Route */}
       </main>
     </div>
   )
