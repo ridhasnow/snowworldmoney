@@ -126,7 +126,7 @@
 /* ===== Product Picker Modal ===== */
 .product-picker{
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  inset: 0;
   z-index: 100;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
@@ -224,6 +224,7 @@
   gap: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
+  will-change: transform;
 }
 
 .picker-item:hover{
