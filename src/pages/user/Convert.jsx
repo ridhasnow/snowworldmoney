@@ -171,10 +171,17 @@ export default function Convert() {
             </div>
           </div>
 
-          <div className="rate-info">
-            {rate.baseTo > 0
-              ? <strong>التعريفة: 1 {fromP?.currency} = {(rate.baseTo / rate.baseFrom).toFixed(6)} {toP?.currency}</strong>
-              : <span>لا توجد تعريفة متاحة</span>}
+                    <div className="rate-info">
+            {rate.baseTo > 0 ? (
+              <>
+                <span>التعريفة: </span>
+                <span className="rate-line" dir="ltr">
+                  1 {fromP?.currency} = {(rate.baseTo / rate.baseFrom).toFixed(6)} {toP?.currency}
+                </span>
+              </>
+            ) : (
+              <span>لا توجد تعريفة متاحة</span>
+            )}
           </div>
 
           <div className="convert-actions">
