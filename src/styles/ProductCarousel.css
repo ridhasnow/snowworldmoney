@@ -1,71 +1,21 @@
-.carousel-container {
-  overflow: hidden;
-  padding: 40px 20px;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.carousel-track {
-  display: flex;
-  animation: scroll 30s linear infinite;
-  gap: 30px;
-}
-
-.carousel-item {
-  min-width: 150px;
-  display: flex;
-  justify-content: center;
-}
-
 .product-circle {
-  width: 150px;
-  height: 150px;
-  border-radius:  50%;
-  background: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.product-circle:hover {
-  transform: scale(1.1);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  width: 120px; /* تقليل الحجم */
+  height: 120px; /* تقليل الحجم */
 }
 
 .product-circle img {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.product-circle p {
-  margin-top: 10px;
-  text-align: center;
-  font-size: 0.9rem;
-  color: #333;
-  font-weight: 600;
-}
-
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  width: 90px; /* الصور أصغر */
+  height: 90px;
 }
 
 @media (max-width: 768px) {
   .product-circle {
-    width: 120px;
-    height: 120px;
+    width: 100px; /* أحجام أصغر للأجهزة الصغيرة */
+    height: 100px;
   }
 
   .product-circle img {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
   }
 }
