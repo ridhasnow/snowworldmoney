@@ -193,61 +193,78 @@ export default function Convert() {
 
       {/* Step 2 */}
       {step === 2 && (
-        <div className="convert-step">
-          <div className="convert-row">
-            <label>كمية التحويل:</label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="أدخل الكمية"
-              required
-              className="input"
-            />
-          </div>
+  <div className="convert-step">
+    {/* كمية التحويل */}
+    <div className="convert-row">
+      <label>كمية التحويل:</label>
+      <input
+        type="number"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        placeholder="أدخل الكمية"
+        required
+        className="input"
+      />
+    </div>
 
-          <div className="convert-row">
-            <label>عنوان الإرسال:</label>
-            <div className="send-address-box">{sendAddress}</div>
-          </div>
+    {/* القيمة المقابلة */}
+    <div className="convert-row">
+      <label>القيمة المقابلة:</label>
+      <div className="rate-output">
+        {calcTo > 0
+          ? `${calcTo.toFixed(6)} ${toP?.currency}`
+          : 'غير متاحة'}
+      </div>
+    </div>
 
-          <div className="convert-row">
-            <label>أدخل عنوان الاستقبال الخاص بك:</label>
-            <input
-              type="text"
-              value={receiveAddress}
-              onChange={(e) => setReceiveAddress(e.target.value)}
-              placeholder="أدخل ايميل/رقم هاتف/رقم D17 الخاص بك/Payeer ID/إيميل Binance"
-              required
-              className="input"
-            />
-          </div>
+    {/* عنوان الإرسال */}
+    <div className="convert-row">
+      <label>عنوان الإرسال:</label>
+      <div className="send-address-box">{sendAddress}</div>
+    </div>
 
-          <div className="convert-row">
-            <label>رفع لقطة الشاشة إثبات الإرسال:</label>
-            <input
-              type="file"
-              onChange={(e) => setProofFile(e.target.files[0])}
-              className="input"
-            />
-          </div>
+    {/* عنوان الاستقبال */}
+    <div className="convert-row">
+      <label>أدخل عنوان الاستقبال الخاص بك:</label>
+      <input
+        type="text"
+        value={receiveAddress}
+        onChange={(e) => setReceiveAddress(e.target.value)}
+        placeholder="أدخل ايميل/رقم هاتف/رقم D17 الخاص بك/Payeer ID/إيميل Binance"
+        required
+        className="input"
+      />
+    </div>
 
-          <div className="convert-row">
-            <label>ID Transaction (رقم التحويل):</label>
-            <input
-              type="text"
-              value={txId}
-              onChange={(e) => setTxId(e.target.value)}
-              placeholder="رقم التحويل"
-              required
-              className="input"
-            />
-          </div>
+    {/* رفع إثبات التحويل */}
+    <div className="convert-row">
+      <label>رفع لقطة الشاشة إثبات الإرسال:</label>
+      <input
+        type="file"
+        onChange={(e) => setProofFile(e.target.files[0])}
+        className="input"
+      />
+    </div>
 
-          <div className="convert-actions">
-            <button className="user-button" onClick={() => setStep(3)}>عرض الطلب</button>
-          </div>
-        </div>
+    {/* رقم المعاملة */}
+    <div className="convert-row">
+      <label>ID Transaction (رقم التحويل):</label>
+      <input
+        type="text"
+        value={txId}
+        onChange={(e) => setTxId(e.target.value)}
+        placeholder="رقم التحويل"
+        required
+        className="input"
+      />
+    </div>
+
+    {/* أزرار التحكم */}
+    <div className="convert-actions">
+      <button className="user-button" onClick={() => setStep(3)}>عرض الطلب</button>
+    </div>
+  </div>
+)}
       )}
 
       {/* Step 3 */}
