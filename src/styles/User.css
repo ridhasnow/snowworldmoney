@@ -115,6 +115,11 @@
   border: 1px solid rgba(109,112,255,.22);
   border-radius: 12px; padding: 12px; text-align:center;
 }
+.rate-line{
+  display: inline-block;
+  direction: ltr;
+  font-weight: 700;
+}
 .send-address-box{
   background: rgba(255,255,255,.06);
   border: 1px dashed rgba(255,255,255,.30);
