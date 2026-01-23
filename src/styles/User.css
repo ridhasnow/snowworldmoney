@@ -120,6 +120,15 @@
   direction: ltr;
   font-weight: 700;
 }
+.rate-output {
+  padding: 12px;
+  background: rgba(109,112,255,.08);
+  border: 1px solid rgba(109,112,255,.22);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+}
 .send-address-box{
   background: rgba(255,255,255,.06);
   border: 1px dashed rgba(255,255,255,.30);
