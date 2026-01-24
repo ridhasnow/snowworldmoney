@@ -7,9 +7,10 @@ import uploadImageToCloudinary from '../../utils/uploadImage'
 import '../../styles/User.css'
 
 const useCloudinary = import.meta.env.VITE_USE_CLOUDINARY === 'true'
+const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export default function Convert() {
-  const u = auth.currentUser
   const [products, setProducts] = useState([])
   const productsCol = useMemo(() => collection(db, 'products'), [db])
 
@@ -70,17 +71,25 @@ export default function Convert() {
   }, [amount, rate])
 
   const validateStep2 = () => {
+    const u = auth.currentUser
     if (!u) { setMsg('❌ يجب تسجيل الدخول لإرسال الطلب'); return false }
     if (!fromP || !toP) { setMsg('❌ الرجاء اختيار منتجين'); return false }
     if (!amount || Number(amount) <= 0 || rate.baseTo === 0) { setMsg('❌ أدخل كمية صحيحة وتعريفة صالحة'); return false }
     if (!receiveAddress.trim()) { setMsg('❌ أدخل عنوان الاستقبال'); return false }
     if (!txId.trim()) { setMsg('❌ أدخل ID Transaction'); return false }
+    if (useCloudinary && proofFile && (!cloudName || !uploadPreset)) {
+      setMsg('❌ إعدادات Cloudinary غير مكتملة (VITE_CLOUDINARY_CLOUD_NAME / VITE_CLOUDINARY_UPLOAD_PRESET)')
+      return false
+    }
     return true
   }
 
   const submitTransfer = async () => {
     setMsg('')
     if (!validateStep2()) return
+
+    const u = auth.currentUser
+    if (!u) { setMsg('❌ انتهت الجلسة، سجّل الدخول مجدداً'); return }
 
     try {
       let proofLink = proofUrl
@@ -115,8 +124,8 @@ export default function Convert() {
       setMsg('✅ تم إرسال الطلب بنجاح. سيتم مراجعته من الأدمن.')
       setStep(3)
     } catch (e) {
-      console.error(e)
-      setMsg('❌ تعذّر إرسال الطلب، حاول لاحقاً')
+      console.error('Error while submitting transfer:', e)
+      setMsg(`❌ تعذّر إرسال الطلب، حاول لاحقاً`)
     }
   }
 
@@ -153,7 +162,6 @@ export default function Convert() {
         </div>
       )}
 
-      {/* Step 1 */}
       {step === 1 && (
         <div className="convert-step">
           <div className="convert-row">
@@ -203,7 +211,6 @@ export default function Convert() {
         </div>
       )}
 
-      {/* Step 2 */}
       {step === 2 && (
         <div className="convert-step">
           <div className="convert-row">
@@ -269,7 +276,6 @@ export default function Convert() {
         </div>
       )}
 
-      {/* Step 3 */}
       {step === 3 && (
         <div className="convert-step">
           <h2>تفاصيل الطلب</h2>
