@@ -16,16 +16,17 @@ export default function Convert() {
   const [fromP, setFromP] = useState(null)
   const [toP, setToP] = useState(null)
   const [step, setStep] = useState(1)
+
   const [amount, setAmount] = useState('')
   const [sendAddress, setSendAddress] = useState('')
   const [rate, setRate] = useState({ baseFrom: 1, baseTo: 0 })
   const [calcTo, setCalcTo] = useState(0)
 
-  // Data for step 2
   const [receiveAddress, setReceiveAddress] = useState('')
   const [proofFile, setProofFile] = useState(null)
   const [proofUrl, setProofUrl] = useState('')
   const [txId, setTxId] = useState('')
+
   const [msg, setMsg] = useState('')
   const [showPicker, setShowPicker] = useState({ open: false, target: null })
 
@@ -68,7 +69,19 @@ export default function Convert() {
     setCalcTo(a * (rate.baseTo / rate.baseFrom))
   }, [amount, rate])
 
+  const validateStep2 = () => {
+    if (!u) { setMsg('❌ يجب تسجيل الدخول لإرسال الطلب'); return false }
+    if (!fromP || !toP) { setMsg('❌ الرجاء اختيار منتجين'); return false }
+    if (!amount || Number(amount) <= 0 || rate.baseTo === 0) { setMsg('❌ أدخل كمية صحيحة وتعريفة صالحة'); return false }
+    if (!receiveAddress.trim()) { setMsg('❌ أدخل عنوان الاستقبال'); return false }
+    if (!txId.trim()) { setMsg('❌ أدخل ID Transaction'); return false }
+    return true
+  }
+
   const submitTransfer = async () => {
+    setMsg('')
+    if (!validateStep2()) return
+
     try {
       let proofLink = proofUrl
       let cloudPublicId = ''
@@ -112,7 +125,6 @@ export default function Convert() {
       <h2 className="section-title">التحويل بين المنتجات</h2>
       {msg && <div className="user-info">{msg}</div>}
 
-      {/* Picker */}
       {showPicker.open && (
         <div className="product-picker">
           <div className="picker-header">
@@ -193,78 +205,68 @@ export default function Convert() {
 
       {/* Step 2 */}
       {step === 2 && (
-  <div className="convert-step">
-    {/* كمية التحويل */}
-    <div className="convert-row">
-      <label>كمية التحويل:</label>
-      <input
-        type="number"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        placeholder="أدخل الكمية"
-        required
-        className="input"
-      />
-    </div>
+        <div className="convert-step">
+          <div className="convert-row">
+            <label>كمية التحويل:</label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="أدخل الكمية"
+              required
+              className="input"
+            />
+          </div>
 
-    {/* القيمة المقابلة */}
-    <div className="convert-row">
-      <label>القيمة المقابلة:</label>
-      <div className="rate-output">
-        {calcTo > 0
-          ? `${calcTo.toFixed(6)} ${toP?.currency}`
-          : 'غير متاحة'}
-      </div>
-    </div>
+          <div className="convert-row">
+            <label>القيمة المقابلة:</label>
+            <div className="rate-output">
+              {calcTo > 0 ? `${calcTo.toFixed(6)} ${toP?.currency}` : 'غير متاحة'}
+            </div>
+          </div>
 
-    {/* عنوان الإرسال */}
-    <div className="convert-row">
-      <label>عنوان الإرسال:</label>
-      <div className="send-address-box">{sendAddress}</div>
-    </div>
+          <div className="convert-row">
+            <label>عنوان الإرسال:</label>
+            <div className="send-address-box">{sendAddress}</div>
+          </div>
 
-    {/* عنوان الاستقبال */}
-    <div className="convert-row">
-      <label>أدخل عنوان الاستقبال الخاص بك:</label>
-      <input
-        type="text"
-        value={receiveAddress}
-        onChange={(e) => setReceiveAddress(e.target.value)}
-        placeholder="أدخل ايميل/رقم هاتف/رقم D17 الخاص بك/Payeer ID/إيميل Binance"
-        required
-        className="input"
-      />
-    </div>
+          <div className="convert-row">
+            <label>أدخل عنوان الاستقبال الخاص بك:</label>
+            <input
+              type="text"
+              value={receiveAddress}
+              onChange={(e) => setReceiveAddress(e.target.value)}
+              placeholder="أدخل ايميل/رقم هاتف/رقم D17 الخاص بك/Payeer ID/إيميل Binance"
+              required
+              className="input"
+            />
+          </div>
 
-    {/* رفع إثبات التحويل */}
-    <div className="convert-row">
-      <label>رفع لقطة الشاشة إثبات الإرسال:</label>
-      <input
-        type="file"
-        onChange={(e) => setProofFile(e.target.files[0])}
-        className="input"
-      />
-    </div>
+          <div className="convert-row">
+            <label>رفع لقطة الشاشة إثبات الإرسال:</label>
+            <input
+              type="file"
+              onChange={(e) => setProofFile(e.target.files[0])}
+              className="input"
+            />
+          </div>
 
-    {/* رقم المعاملة */}
-    <div className="convert-row">
-      <label>ID Transaction (رقم التحويل):</label>
-      <input
-        type="text"
-        value={txId}
-        onChange={(e) => setTxId(e.target.value)}
-        placeholder="رقم التحويل"
-        required
-        className="input"
-      />
-    </div>
+          <div className="convert-row">
+            <label>ID Transaction (رقم التحويل):</label>
+            <input
+              type="text"
+              value={txId}
+              onChange={(e) => setTxId(e.target.value)}
+              placeholder="رقم التحويل"
+              required
+              className="input"
+            />
+          </div>
 
-    {/* أزرار التحكم */}
-    <div className="convert-actions">
-      <button className="user-button" onClick={() => setStep(3)}>عرض الطلب</button>
-    </div>
-  </div>
-)}
+          <div className="convert-actions">
+            <button className="user-button" onClick={() => validateStep2() && setStep(3)}>عرض الطلب</button>
+          </div>
+        </div>
       )}
 
       {/* Step 3 */}
@@ -273,6 +275,7 @@ export default function Convert() {
           <h2>تفاصيل الطلب</h2>
           <div className="convert-summary">
             <p><strong>الكمية:</strong> {amount} {fromP?.currency}</p>
+            <p><strong>القيمة المقابلة:</strong> {calcTo.toFixed(6)} {toP?.currency}</p>
             <p><strong>الإرسال إلى:</strong> {sendAddress}</p>
             <p><strong>عنوان الاستقبال:</strong> {receiveAddress}</p>
             <p><strong>ID Transaction:</strong> {txId}</p>
