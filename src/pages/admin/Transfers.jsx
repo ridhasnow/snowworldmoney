@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { db } from '../../firebase'
-import { collection, getDocs, query, orderBy, limit, startAfter } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, limit, startAfter, updateDoc, doc } from 'firebase/firestore'
 import '../../styles/User.css'
 
 const PAGE_SIZE = 50
@@ -11,18 +11,14 @@ export default function Transfers() {
   const [error, setError] = useState('')
   const [page, setPage] = useState(0)
   const [cursors, setCursors] = useState([])
+  const [editTx, setEditTx] = useState(null) // {id,status,note}
 
   const loadPage = async (pageIndex) => {
     setLoading(true); setError('')
     try {
       let q = query(collection(db, 'transfers'), orderBy('createdAt', 'desc'), limit(PAGE_SIZE))
       if (pageIndex > 0 && cursors[pageIndex - 1]) {
-        q = query(
-          collection(db, 'transfers'),
-          orderBy('createdAt', 'desc'),
-          startAfter(cursors[pageIndex - 1]),
-          limit(PAGE_SIZE)
-        )
+        q = query(collection(db, 'transfers'), orderBy('createdAt', 'desc'), startAfter(cursors[pageIndex - 1]), limit(PAGE_SIZE))
       }
       const snap = await getDocs(q)
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data(), _doc: d }))
@@ -69,6 +65,25 @@ export default function Transfers() {
     return btns
   }
 
+  const startEditTx = (tx) => {
+    setEditTx({ id: tx.id, status: tx.status || 'pending', note: tx.adminNote || '' })
+  }
+
+  const saveEditTx = async () => {
+    if (!editTx) return
+    try {
+      await updateDoc(doc(db, 'transfers', editTx.id), {
+        status: editTx.status,
+        adminNote: editTx.note || ''
+      })
+      setItems(prev => prev.map(t => t.id === editTx.id ? { ...t, status: editTx.status, adminNote: editTx.note } : t))
+      setEditTx(null)
+    } catch (e) {
+      console.error(e)
+      alert('تعذّر حفظ التعديل')
+    }
+  }
+
   if (loading && items.length === 0) return <div className="admin-loading">...جار التحميل</div>
   if (error) return <div className="admin-card">{error}</div>
 
@@ -86,7 +101,11 @@ export default function Transfers() {
           <div>عنوان الاستقبال: {it.receiveAddress || '—'}</div>
           {it.txId && <div>Transaction ID: {it.txId}</div>}
           {it.proofUrl && <div><a href={it.proofUrl} target="_blank" rel="noreferrer">صورة الإثبات</a></div>}
+          {it.adminNote && <div>ملاحظة الأدمن: {it.adminNote}</div>}
           <div>التاريخ: {it.createdAt?.seconds ? new Date(it.createdAt.seconds * 1000).toLocaleString() : '—'}</div>
+          <div style={{ marginTop: 8 }}>
+            <button className="user-button" onClick={() => startEditTx(it)}>✏️ تعديل الحالة/ملاحظة</button>
+          </div>
         </div>
       ))}
 
@@ -97,6 +116,44 @@ export default function Transfers() {
       </div>
 
       {loading && <div className="admin-card">...جار التحميل</div>}
+
+      {/* مودال التعديل */}
+      {editTx && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>تعديل الطلب</h3>
+              <button className="close-picker" onClick={() => setEditTx(null)}>✖</button>
+            </div>
+            <div className="modal-body">
+              <label>الحالة</label>
+              <select
+                className="input"
+                value={editTx.status}
+                onChange={(e) => setEditTx(prev => ({ ...prev, status: e.target.value }))}
+              >
+                <option value="pending">قيد المراجعة</option>
+                <option value="approved">مقبولة</option>
+                <option value="rejected">مرفوضة</option>
+              </select>
+
+              <label style={{ marginTop: 8 }}>ملاحظة الأدمن</label>
+              <textarea
+                className="input"
+                rows={3}
+                value={editTx.note}
+                onChange={(e) => setEditTx(prev => ({ ...prev, note: e.target.value }))}
+                placeholder="اكتب ملاحظة ستظهر للمستخدم"
+              />
+
+              <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                <button className="user-button success" onClick={saveEditTx}>حفظ</button>
+                <button className="user-button secondary" onClick={() => setEditTx(null)}>إلغاء</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
