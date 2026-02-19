@@ -6,6 +6,7 @@ import {
 import '../../styles/User.css'
 
 const PAGE_SIZE = 50
+const TX_PAGE_SIZE = 50
 
 export default function Users() {
   const [items, setItems] = useState([])
@@ -14,10 +15,12 @@ export default function Users() {
   const [page, setPage] = useState(0)
   const [cursors, setCursors] = useState([])
   const [search, setSearch] = useState('')
-  const [selectedUser, setSelectedUser] = useState(null) // لعرض تفاصيل المستخدم
-  const [userTransfers, setUserTransfers] = useState([]) // معاملات المستخدم
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [userTransfers, setUserTransfers] = useState([])
+  const [txPage, setTxPage] = useState(0)
+  const [txCursors, setTxCursors] = useState([])
   const [loadingTransfers, setLoadingTransfers] = useState(false)
-  const [editTx, setEditTx] = useState(null) // {id, status, note}
+  const [editTx, setEditTx] = useState(null)
 
   const usersCol = useMemo(() => collection(db, 'users'), [])
 
@@ -38,7 +41,9 @@ export default function Users() {
         )
       }
       const snap = await getDocs(q)
-      const docs = snap.docs.map(d => ({ id: d.id, ...d.data(), _doc: d }))
+      const docs = snap.docs
+        .map(d => ({ id: d.id, ...d.data(), _doc: d }))
+        .filter(u => (u.role || '').toLowerCase() !== 'admin') // إخفاء الأدمن
       setItems(docs)
       if (docs.length > 0 && !search.trim()) {
         const lastDoc = docs[docs.length - 1]._doc
@@ -57,7 +62,7 @@ export default function Users() {
     }
   }
 
-  useEffect(() => { loadPage(0) }, []) // مبدئياً
+  useEffect(() => { loadPage(0) }, [])
 
   const hasPrev = page > 0
   const hasNext = !search.trim() && items.length === PAGE_SIZE
@@ -82,26 +87,52 @@ export default function Users() {
     return btns
   }
 
-  const openUserDetails = async (user) => {
-    setSelectedUser(user)
-    setUserTransfers([])
+  const loadUserTransfers = async (user, pageIndex = 0) => {
     setLoadingTransfers(true)
     try {
-      const q = query(
+      let q = query(
         collection(db, 'transfers'),
         where('userEmail', '==', user.email || user.id),
         orderBy('createdAt', 'desc'),
-        limit(50)
+        limit(TX_PAGE_SIZE)
       )
+      if (pageIndex > 0 && txCursors[pageIndex - 1]) {
+        q = query(
+          collection(db, 'transfers'),
+          where('userEmail', '==', user.email || user.id),
+          orderBy('createdAt', 'desc'),
+          startAfter(txCursors[pageIndex - 1]),
+          limit(TX_PAGE_SIZE)
+        )
+      }
       const snap = await getDocs(q)
-      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data(), _doc: d }))
       setUserTransfers(docs)
+      if (docs.length > 0) {
+        const lastDoc = docs[docs.length - 1]._doc
+        setTxCursors(prev => {
+          const next = [...prev]
+          next[pageIndex] = lastDoc
+          return next
+        })
+      }
+      setTxPage(pageIndex)
     } catch (e) {
       console.error(e)
     } finally {
       setLoadingTransfers(false)
     }
   }
+
+  const openUserDetails = (user) => {
+    setSelectedUser(user)
+    setUserTransfers([])
+    setTxPage(0); setTxCursors([])
+    loadUserTransfers(user, 0)
+  }
+
+  const hasPrevTx = txPage > 0
+  const hasNextTx = userTransfers.length === TX_PAGE_SIZE
 
   const startEditTx = (tx) => {
     setEditTx({ id: tx.id, status: tx.status || 'pending', note: tx.adminNote || '' })
@@ -114,7 +145,6 @@ export default function Users() {
         status: editTx.status,
         adminNote: editTx.note || ''
       })
-      // حدث القائمة المحلية
       setUserTransfers(prev => prev.map(t => t.id === editTx.id ? { ...t, status: editTx.status, adminNote: editTx.note } : t))
       setEditTx(null)
     } catch (e) {
@@ -146,8 +176,12 @@ export default function Users() {
 
       {items.length === 0 && !loading && <div className="admin-card">لا يوجد مستخدمون حالياً.</div>}
       {items.map(u => (
-        <div key={u.id} className="admin-card" style={{ marginBottom: 12, position: 'relative' }}>
+        <div key={u.id} className="admin-card" style={{ marginBottom: 12 }}>
           <div><strong>{u.email || u.id}</strong></div>
+          {u.username && <div>الاسم المستعار: {u.username}</div>}
+          {u.firstName && <div>الاسم الأول: {u.firstName}</div>}
+          {u.lastName && <div>الاسم الأخير: {u.lastName}</div>}
+          {u.phone && <div>الهاتف: {u.phone}</div>}
           {u.role && <div>الدور: {u.role}</div>}
           {u.createdAt?.seconds && <div>تاريخ الإنشاء: {new Date(u.createdAt.seconds * 1000).toLocaleString()}</div>}
           <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -162,16 +196,24 @@ export default function Users() {
         <button className="pager-btn" disabled={!hasNext} onClick={() => hasNext && loadPage(page + 1)}>التالي</button>
       </div>
 
-      {/* مودال تفاصيل المستخدم والمعاملات */}
+      {/* مودال تفاصيل المستخدم */}
       {selectedUser && (
         <div className="modal-backdrop">
-          <div className="modal">
+          <div className="modal modal-scroll">
             <div className="modal-header">
               <h3>تفاصيل المستخدم</h3>
               <button className="close-picker" onClick={() => { setSelectedUser(null); setUserTransfers([]) }}>✖</button>
             </div>
             <div className="modal-body">
               <div><strong>البريد:</strong> {selectedUser.email || selectedUser.id}</div>
+              {selectedUser.username && <div><strong>الاسم المستعار:</strong> {selectedUser.username}</div>}
+              {selectedUser.firstName && <div><strong>الاسم الأول:</strong> {selectedUser.firstName}</div>}
+              {selectedUser.lastName && <div><strong>الاسم الأخير:</strong> {selectedUser.lastName}</div>}
+              {selectedUser.phone && <div><strong>الهاتف:</strong> {selectedUser.phone}</div>}
+              {selectedUser.address && <div><strong>العنوان:</strong> {selectedUser.address}</div>}
+              {selectedUser.birthdate && <div><strong>تاريخ الميلاد:</strong> {selectedUser.birthdate}</div>}
+              {selectedUser.whatsapp && <div><strong>واتساب:</strong> {selectedUser.whatsapp}</div>}
+              {selectedUser.telegram && <div><strong>تيليجرام:</strong> {selectedUser.telegram}</div>}
               {selectedUser.role && <div><strong>الدور:</strong> {selectedUser.role}</div>}
               {selectedUser.createdAt?.seconds && <div><strong>تاريخ الإنشاء:</strong> {new Date(selectedUser.createdAt.seconds * 1000).toLocaleString()}</div>}
 
@@ -198,6 +240,12 @@ export default function Users() {
                   </div>
                 </div>
               ))}
+
+              <div className="pager">
+                <button className="pager-btn" disabled={!hasPrevTx} onClick={() => hasPrevTx && loadUserTransfers(selectedUser, txPage - 1)}>السابق</button>
+                <span className="pager-btn active">صفحة {txPage + 1}</span>
+                <button className="pager-btn" disabled={!hasNextTx} onClick={() => hasNextTx && loadUserTransfers(selectedUser, txPage + 1)}>التالي</button>
+              </div>
             </div>
           </div>
         </div>
