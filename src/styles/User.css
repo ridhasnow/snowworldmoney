@@ -257,7 +257,10 @@
   font-size: 18px;
   cursor: pointer;
 }
-
+.modal-scroll {
+  max-height: 80vh;
+  overflow-y: auto;
+}
 /* ===== Pager buttons ===== */
 .pager {
   margin-top: 16px;
