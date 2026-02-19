@@ -5,6 +5,9 @@ import '../../styles/User.css'
 
 const PAGE_SIZE = 50
 
+const fmt = (v, max = 6) =>
+  Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: max })
+
 export default function History() {
   const [items, setItems] = useState([])
   const [error, setError] = useState('')
@@ -105,8 +108,12 @@ export default function History() {
               {statusBadge(it.status)}
             </div>
             <div className="history-body">
-              <div>الكمية: {it.amountFrom} {it.fromCurrency} → {it.amountTo} {it.toCurrency}</div>
-              <div>التعريفة: 1 {it.fromCurrency} = {it.rateTo} {it.toCurrency}</div>
+              <div>
+                الكمية: {fmt(it.amountFrom)} {it.fromCurrency} = {fmt(it.amountTo, 6)} {it.toCurrency}
+              </div>
+              <div>
+                التعريفة: 1 {it.fromCurrency} = {fmt(it.rateTo, 6)} {it.toCurrency}
+              </div>
               {it.txId && <div>Transaction ID: {it.txId}</div>}
               {it.receiveAddress && <div>عنوان الاستقبال: {it.receiveAddress}</div>}
               {it.proofUrl && <a href={it.proofUrl} target="_blank" rel="noreferrer">صورة الإثبات</a>}
