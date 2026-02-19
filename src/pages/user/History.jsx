@@ -4,7 +4,6 @@ import { collection, query, where, orderBy, getDocs, limit, startAfter } from 'f
 import '../../styles/User.css'
 
 const PAGE_SIZE = 50
-
 const fmt = (v, max = 6) =>
   Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: max })
 
@@ -38,7 +37,6 @@ export default function History() {
       const snap = await getDocs(q)
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data(), _doc: d }))
       setItems(docs)
-      // حفظ مؤشر الصفحة الجديدة
       if (docs.length > 0) {
         const lastDoc = docs[docs.length - 1]._doc
         setCursors(prev => {
@@ -74,7 +72,6 @@ export default function History() {
   const hasNext = items.length === PAGE_SIZE // قد يكون هناك صفحة لاحقة
 
   const pageButtons = () => {
-    // نعرض نافذة صغيرة حول الصفحة الحالية لتسهيل التنقل
     const windowSize = 5
     const start = Math.max(0, page - 2)
     const btns = []
@@ -89,7 +86,6 @@ export default function History() {
           {i + 1}
         </button>
       )
-      // نتوقف إن لم نكن نعرف بعد عن صفحات لاحقة ولم نملأ النافذة
       if (i > page && !hasNext) break
     }
     return btns
@@ -108,11 +104,15 @@ export default function History() {
               {statusBadge(it.status)}
             </div>
             <div className="history-body">
-              <div>
-                الكمية: {fmt(it.amountFrom)} {it.fromCurrency} = {fmt(it.amountTo, 6)} {it.toCurrency}
+              <div className="pill-row">
+                <span className="pill">{fmt(it.amountFrom)} {it.fromCurrency}</span>
+                <span className="pill pill-eq">=</span>
+                <span className="pill">{fmt(it.amountTo, 6)} {it.toCurrency}</span>
               </div>
-              <div>
-                التعريفة: 1 {it.fromCurrency} = {fmt(it.rateTo, 6)} {it.toCurrency}
+              <div className="pill-row">
+                <span className="pill">1 {it.fromCurrency}</span>
+                <span className="pill pill-eq">=</span>
+                <span className="pill">{fmt(it.rateTo, 6)} {it.toCurrency}</span>
               </div>
               {it.txId && <div>Transaction ID: {it.txId}</div>}
               {it.receiveAddress && <div>عنوان الاستقبال: {it.receiveAddress}</div>}
