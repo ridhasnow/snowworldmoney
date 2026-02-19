@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { auth, db } from '../../firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import whatsappIcon from '../../assets/whatsapp.png'
-import telegramIcon from '../../assets/telegram.png'
 import '../../styles/User.css'
 
 export default function Profile() {
@@ -41,10 +39,11 @@ export default function Profile() {
         }))
       }
     })
-  }, [])
+  }, [u])
 
   const save = async (e) => {
     e.preventDefault()
+    if (!u) { setMsg('❌ يجب تسجيل الدخول'); return }
     try {
       await setDoc(doc(db, 'users', u.email), {
         avatar: form.avatar,
@@ -55,11 +54,13 @@ export default function Profile() {
         phone: form.phone,
         birthdate: form.birthdate,
         whatsapp: form.whatsapp,
-        telegram: form.telegram
+        telegram: form.telegram,
+        email: u.email,
+        updatedAt: new Date()
       }, { merge: true })
       setMsg('✅ تم حفظ البروفايل بنجاح')
-      // لا حاجة لتحديث الشريط يدوياً؛ UserLayout يستمع بـ onSnapshot
-    } catch {
+    } catch (e) {
+      console.error(e)
       setMsg('❌ تعذّر الحفظ، حاول لاحقاً')
     }
   }
@@ -92,13 +93,13 @@ export default function Profile() {
           ))}
         </div>
 
-        <label>اسم المستخدم</label>
+        <label>اسم المستخدم (Username)</label>
         <input className="input" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} />
 
-        <label>الاسم</label>
+        <label>الاسم الأول</label>
         <input className="input" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} />
 
-        <label>اللقب</label>
+        <label>الاسم الأخير</label>
         <input className="input" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} />
 
         <label>العنوان</label>
@@ -107,29 +108,16 @@ export default function Profile() {
         <label>رقم الهاتف</label>
         <input className="input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
 
-        <label>تاريخ الولادة</label>
+        <label>تاريخ الميلاد</label>
         <input type="date" className="input" value={form.birthdate} onChange={e => setForm({ ...form, birthdate: e.target.value })} />
 
-        <label>واتساب</label>
-        <div className="social-row">
-          <img src={whatsappIcon} alt="whatsapp" />
-          <input className="input" value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value })}
-                 placeholder="رقم واتساب أو رابط" />
-        </div>
+        <label>WhatsApp</label>
+        <input className="input" value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value })} />
 
-        <label>تيليجرام</label>
-        <div className="social-row">
-          <img src={telegramIcon} alt="telegram" />
-          <input className="input" value={form.telegram} onChange={e => setForm({ ...form, telegram: e.target.value })}
-                 placeholder="@username" />
-        </div>
+        <label>Telegram</label>
+        <input className="input" value={form.telegram} onChange={e => setForm({ ...form, telegram: e.target.value })} />
 
-        <label>البريد الإلكتروني (غير قابل للتعديل)</label>
-        <input className="input" value={form.email} readOnly />
-
-        <div style={{ display:'flex', gap:8, marginTop:10 }}>
-          <button className="user-button" type="submit">حفظ</button>
-        </div>
+        <button type="submit" className="user-button">حفظ</button>
       </form>
     </div>
   )
