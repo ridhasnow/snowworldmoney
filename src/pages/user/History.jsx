@@ -110,6 +110,7 @@ export default function History() {
               {it.txId && <div>Transaction ID: {it.txId}</div>}
               {it.receiveAddress && <div>عنوان الاستقبال: {it.receiveAddress}</div>}
               {it.proofUrl && <a href={it.proofUrl} target="_blank" rel="noreferrer">صورة الإثبات</a>}
+              {it.adminNote && <div><strong>ملاحظة الأدمن:</strong> {it.adminNote}</div>}
               <div className="history-meta">بتاريخ: {formatDate(it.createdAt)}</div>
             </div>
           </div>
