@@ -156,6 +156,26 @@
   font-weight: 700;
   text-align: center;
 }
+/* Pills for amounts/rates */
+.pill-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.pill {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-weight: 700;
+}
+.pill-eq {
+  background: #e2e8f0;
+  padding-inline: 10px;
+}
 .send-address-box{
   background: rgba(255,255,255,.06);
   border: 1px dashed rgba(255,255,255,.30);
