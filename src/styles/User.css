@@ -163,6 +163,7 @@
   flex-wrap: wrap;
   align-items: center;
   margin-bottom: 6px;
+  direction: ltr; /* يمنع انقلاب الترتيب في العربية */
 }
 .pill {
   background: #f8fafc;
@@ -171,6 +172,7 @@
   border-radius: 10px;
   padding: 6px 10px;
   font-weight: 700;
+  direction: ltr;
 }
 .pill-eq {
   background: #e2e8f0;
