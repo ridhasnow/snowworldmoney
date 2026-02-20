@@ -97,31 +97,54 @@ export default function History() {
       {error && <div className="user-info">{error}</div>}
       {loading && <div className="user-info">...جار التحميل</div>}
       <div className="history-list">
-        {items.map(it => (
-          <div key={it.id} className="history-item">
-            <div className="history-header">
-              <strong>{it.fromName} → {it.toName}</strong>
-              {statusBadge(it.status)}
-            </div>
-            <div className="history-body">
-              <div className="pill-row">
-                <span className="pill">{fmt(it.amountFrom)} {it.fromCurrency}</span>
-                <span className="pill pill-eq">=</span>
-                <span className="pill">{fmt(it.amountTo, 6)} {it.toCurrency}</span>
+        {items.map(it => {
+          // تعريفة الاتجاه الأساسي
+          const directRate = it.rateTo && it.rateTo !== 0
+            ? it.rateTo
+            : (it.rateFrom && it.rateFrom !== 0 ? 1 / it.rateFrom : null)
+          // التعريفة المعكوسة
+          const inverseRate = it.rateFrom && it.rateFrom !== 0
+            ? it.rateFrom
+            : (it.rateTo && it.rateTo !== 0 ? 1 / it.rateTo : null)
+
+          return (
+            <div key={it.id} className="history-item">
+              <div className="history-header">
+                <strong>{it.fromName} → {it.toName}</strong>
+                {statusBadge(it.status)}
               </div>
-              <div className="pill-row">
-                <span className="pill">1 {it.fromCurrency}</span>
-                <span className="pill pill-eq">=</span>
-                <span className="pill">{fmt(it.rateTo, 6)} {it.toCurrency}</span>
+              <div className="history-body">
+                <div className="pill-row">
+                  <span className="pill">{fmt(it.amountFrom)} {it.fromCurrency}</span>
+                  <span className="pill pill-eq">=</span>
+                  <span className="pill">{fmt(it.amountTo, 6)} {it.toCurrency}</span>
+                </div>
+
+                {directRate && (
+                  <div className="pill-row">
+                    <span className="pill">1 {it.fromCurrency}</span>
+                    <span className="pill pill-eq">=</span>
+                    <span className="pill">{fmt(directRate, 6)} {it.toCurrency}</span>
+                  </div>
+                )}
+
+                {inverseRate && (
+                  <div className="pill-row">
+                    <span className="pill">1 {it.toCurrency}</span>
+                    <span className="pill pill-eq">=</span>
+                    <span className="pill">{fmt(inverseRate, 6)} {it.fromCurrency}</span>
+                  </div>
+                )}
+
+                {it.txId && <div>Transaction ID: {it.txId}</div>}
+                {it.receiveAddress && <div>عنوان الاستقبال: {it.receiveAddress}</div>}
+                {it.proofUrl && <a href={it.proofUrl} target="_blank" rel="noreferrer">صورة الإثبات</a>}
+                {it.adminNote && <div><strong>ملاحظة الأدمن:</strong> {it.adminNote}</div>}
+                <div className="history-meta">بتاريخ: {formatDate(it.createdAt)}</div>
               </div>
-              {it.txId && <div>Transaction ID: {it.txId}</div>}
-              {it.receiveAddress && <div>عنوان الاستقبال: {it.receiveAddress}</div>}
-              {it.proofUrl && <a href={it.proofUrl} target="_blank" rel="noreferrer">صورة الإثبات</a>}
-              {it.adminNote && <div><strong>ملاحظة الأدمن:</strong> {it.adminNote}</div>}
-              <div className="history-meta">بتاريخ: {formatDate(it.createdAt)}</div>
             </div>
-          </div>
-        ))}
+          )
+        })}
         {items.length === 0 && !error && !loading && <div className="user-info">لا توجد معاملات بعد.</div>}
       </div>
 
