@@ -98,10 +98,11 @@ export default function History() {
       {loading && <div className="user-info">...جار التحميل</div>}
       <div className="history-list">
         {items.map(it => {
-          // التعريفة من العملة المرسلة إلى العملة المستقبَلة
-          const directRate = it.rateTo && it.rateTo !== 0
-            ? it.rateTo
-            : (it.rateFrom && it.rateFrom !== 0 ? 1 / it.rateFrom : null)
+          // استخدم التعريفة المشتقة من الكمية إذا وُجدت، وإلا الحقل المخزَّن
+          const derivedRate = it.amountFrom ? (it.amountTo || 0) / it.amountFrom : null
+          const displayRate = derivedRate && derivedRate !== 0
+            ? derivedRate
+            : (it.rateTo && it.rateTo !== 0 ? it.rateTo : null)
 
           return (
             <div key={it.id} className="history-item">
@@ -116,11 +117,11 @@ export default function History() {
                   <span className="pill">{fmt(it.amountTo, 6)} {it.toCurrency}</span>
                 </div>
 
-                {directRate && (
+                {displayRate && (
                   <div className="pill-row">
                     <span className="pill">1 {it.fromCurrency}</span>
                     <span className="pill pill-eq">=</span>
-                    <span className="pill">{fmt(directRate, 6)} {it.toCurrency}</span>
+                    <span className="pill">{fmt(displayRate, 6)} {it.toCurrency}</span>
                   </div>
                 )}
 
