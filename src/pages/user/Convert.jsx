@@ -31,39 +31,50 @@ export default function Convert() {
   const [msg, setMsg] = useState('')
   const [showPicker, setShowPicker] = useState({ open: false, target: null })
 
+  // جلب المنتجات وضبط المسار الافتراضي: من Payeer إلى D17
   useEffect(() => {
     const load = async () => {
       const snap = await getDocs(query(productsCol, orderBy('updatedAt', 'desc'), limit(200)))
       const items = snap.docs.map(d => ({ id: d.id, ...d.data() }))
       setProducts(items)
 
-      const d17 = items.find(p => p.name?.toLowerCase().includes('d17')) || items[0]
-      const payeer = items.find(p => p.name?.toLowerCase().includes('payeer')) || items[1] || items[0]
-      setFromP(d17)
-      setToP(payeer)
+      const payeer = items.find(p => (p.name || '').toLowerCase().includes('payeer')) || items[0]
+      const d17 = items.find(p => (p.name || '').toLowerCase().includes('d17')) || items[1] || items[0]
+
+      setFromP(payeer)
+      setToP(d17)
     }
     load()
   }, [])
 
   const computeRate = () => {
     if (!fromP || !toP) return { baseFrom: 1, baseTo: 0 }
+
+    // ابحث عن مسار مباشر من العملة المُرسِلة إلى المستقبِلة
     const direct = (Array.isArray(fromP.routes) ? fromP.routes : []).find(r => r.toId === toP.id)
-    if (direct) return { baseFrom: Number(direct.baseFrom || 1), baseTo: Number(direct.baseTo || 0) }
+    if (direct) {
+      return { baseFrom: Number(direct.baseFrom || 1), baseTo: Number(direct.baseTo || 0) }
+    }
+
+    // إن لم يوجد، حاول المسار العكسي (نحسب المعكوس)
     const reverse = (Array.isArray(toP.routes) ? toP.routes : []).find(r => r.toId === fromP.id)
     if (reverse) {
       const bf = Number(reverse.baseFrom || 1)
       const bt = Number(reverse.baseTo || 0)
       if (bt > 0) return { baseFrom: 1, baseTo: bf / bt }
     }
+
     return { baseFrom: 1, baseTo: 0 }
   }
 
+  // تحديث التعريفة وعنوان الإرسال عند تغيير المنتجات
   useEffect(() => {
     const r = computeRate()
     setRate(r)
-    setSendAddress(fromP?.sendAddress || '')
+    setSendAddress(fromP?.sendAddress || '') // عنوان الإرسال هو الخاص بالعملة المُرسِلة (من المنتج)
   }, [fromP, toP])
 
+  // حساب القيمة المقابلة
   useEffect(() => {
     const a = Number(amount || 0)
     if (!a || rate.baseTo === 0) { setCalcTo(0); return }
@@ -89,7 +100,7 @@ export default function Convert() {
     if (!validateStep2()) return
 
     const u = auth.currentUser
-    if (!u) { setMsg('❌ انتهت الجلسة، سجّل الدخول مجدداً'); return }
+    if (!u) { setMsg('❌ انتهت الجلسة، سجّل الدخ��ل مجدداً'); return }
 
     try {
       let proofLink = proofUrl
@@ -113,7 +124,7 @@ export default function Convert() {
         rateTo: rate.baseTo,
         amountFrom: Number(amount),
         amountTo: Number(calcTo),
-        sendAddress: fromP.sendAddress || '',
+        sendAddress: fromP.sendAddress || '', // عنوان الإرسال من المنتج المرسل
         receiveAddress,
         txId,
         proofUrl: proofLink || '',
@@ -127,6 +138,14 @@ export default function Convert() {
       console.error('Error while submitting transfer:', e)
       setMsg(`❌ تعذّر إرسال الطلب، حاول لاحقاً`)
     }
+  }
+
+  const swapProducts = () => {
+    setFromP(toP)
+    setToP(fromP)
+    setAmount('')
+    setCalcTo(0)
+    setMsg('')
   }
 
   return (
@@ -174,7 +193,7 @@ export default function Convert() {
               <button className="user-button" onClick={() => setShowPicker({ open: true, target: 'from' })}>تغيير الاختيار</button>
             </div>
 
-            <div className="arrow-box">→</div>
+            <div className="arrow-box" onClick={swapProducts} style={{ cursor: 'pointer' }}>⇄</div>
 
             <div className="product-box">
               <div className="product-title">إلى</div>
@@ -203,9 +222,9 @@ export default function Convert() {
             <button
               className="user-button"
               disabled={!fromP || !toP || rate.baseTo === 0}
-              onClick={() => setStep(2)}
+              onClick={() => { setStep(2); setMsg('') }}
             >
-              أكمل
+              المتابعة
             </button>
           </div>
         </div>
@@ -213,85 +232,60 @@ export default function Convert() {
 
       {step === 2 && (
         <div className="convert-step">
-          <div className="convert-row">
-            <label>كمية التحويل:</label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="أدخل الكمية"
-              required
-              className="input"
-            />
+          <label>كمية التحويل:</label>
+          <input
+            className="input"
+            type="number"
+            min="0"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            placeholder={`مثال: 10 ${fromP?.currency || ''}`}
+          />
+
+          <label>القيمة المقابلة:</label>
+          <div className="rate-output">
+            {calcTo ? `${calcTo.toFixed(6)} ${toP?.currency || ''}` : '—'}
           </div>
 
-          <div className="convert-row">
-            <label>القيمة المقابلة:</label>
-            <div className="rate-output">
-              {calcTo > 0 ? `${calcTo.toFixed(6)} ${toP?.currency}` : 'غير متاحة'}
-            </div>
+          <label>عنوان الإرسال:</label>
+          <div className="send-address-box">
+            {sendAddress || '—'}
           </div>
 
-          <div className="convert-row">
-            <label>عنوان الإرسال:</label>
-            <div className="send-address-box">{sendAddress}</div>
-          </div>
+          <label>أدخل عنوان الاستقبال الخاص بك:</label>
+          <input
+            className="input"
+            value={receiveAddress}
+            onChange={e => setReceiveAddress(e.target.value)}
+            placeholder="عنوان الاستقبال"
+          />
 
-          <div className="convert-row">
-            <label>أدخل عنوان الاستقبال الخاص بك:</label>
-            <input
-              type="text"
-              value={receiveAddress}
-              onChange={(e) => setReceiveAddress(e.target.value)}
-              placeholder="أدخل ايميل/رقم هاتف/رقم D17 الخاص بك/Payeer ID/إيميل Binance"
-              required
-              className="input"
-            />
-          </div>
+          <label>رفع لقطة الشاشة إثبات الإرسال:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+          />
 
-          <div className="convert-row">
-            <label>رفع لقطة الشاشة إثبات الإرسال:</label>
-            <input
-              type="file"
-              onChange={(e) => setProofFile(e.target.files[0])}
-              className="input"
-            />
-          </div>
-
-          <div className="convert-row">
-            <label>ID Transaction (رقم التحويل):</label>
-            <input
-              type="text"
-              value={txId}
-              onChange={(e) => setTxId(e.target.value)}
-              placeholder="رقم التحويل"
-              required
-              className="input"
-            />
-          </div>
+          <label>ID Transaction (رقم التحويل):</label>
+          <input
+            className="input"
+            value={txId}
+            onChange={e => setTxId(e.target.value)}
+            placeholder="أدخل رقم التحويل"
+          />
 
           <div className="convert-actions">
-            <button className="user-button" onClick={() => validateStep2() && setStep(3)}>عرض الطلب</button>
+            <button className="user-button secondary" onClick={() => setStep(1)}>رجوع</button>
+            <button className="user-button" onClick={submitTransfer}>إرسال الطلب</button>
           </div>
         </div>
       )}
 
       {step === 3 && (
         <div className="convert-step">
-          <h2>تفاصيل الطلب</h2>
-          <div className="convert-summary">
-            <p><strong>الكمية:</strong> {amount} {fromP?.currency}</p>
-            <p><strong>القيمة المقابلة:</strong> {calcTo.toFixed(6)} {toP?.currency}</p>
-            <p><strong>الإرسال إلى:</strong> {sendAddress}</p>
-            <p><strong>عنوان الاستقبال:</strong> {receiveAddress}</p>
-            <p><strong>ID Transaction:</strong> {txId}</p>
-            {proofFile && <p><strong>إثبات الإرسال:</strong> صورة مرفوعة</p>}
-          </div>
-          <div className="convert-actions">
-            <button className="user-button" onClick={() => setStep(2)}>تعديل</button>
-            <button className="user-button secondary" onClick={() => setStep(1)}>إلغاء</button>
-            <button className="user-button success" onClick={submitTransfer}>إرسال الطلب</button>
-          </div>
+          <div className="user-info">✅ تم إرسال الطلب، ستتم مراجعته من الأدمن.</div>
+          <button className="user-button" onClick={() => { setStep(1); setAmount(''); setCalcTo(0); setTxId(''); setReceiveAddress(''); setProofFile(null); setProofUrl(''); }}>طلب جديد</button>
         </div>
       )}
     </div>
